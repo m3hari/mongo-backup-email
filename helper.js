@@ -1,4 +1,7 @@
 ﻿const winston = require("winston");
+const zip = require("node-zip");
+const fs = require("fs");
+const path = require("path");
 
 winston.add(winston.transports.File, { filename: "backup.log" });
 winston.remove(winston.transports.Console);
@@ -37,10 +40,15 @@ const buildSubject = (project, db, timestamp) => {
 const backupDB = (project, db, basePath, timestamp, cb) => {
   winston.log("info", "dumping db ...");
   const fileName = buildFileName(project, db, timestamp);
+  const zipFileName = `${fileName.slice(0, -4)}.zip`;
   const filePath = path.join(basePath, fileName);
-  exec(`mongodump --db ${db} --gzip --archive=${filePath}`, () =>
-    cb(null, fileName)
-  );
+  exec(`mongodump --db ${db} --gzip --archive=${filePath}`, () => {
+    const zipper = zip();
+    zipper.file(zipFileName, fs.readFileSync(path.join(__dirname, fileName)));
+    const data = zipper.generate({ base64: false, compression: "DEFLATE" });
+    fs.writeFileSync(zipFileName, data, "binary");
+    cb(null, zipFileName);
+  });
 };
 const emailSender = (data, cb) => {
   winston.log("info", "sending email ...");
@@ -89,14 +97,7 @@ module.exports = {
           fileName,
           path: basePath
         },
-        (err, info) => {
-          if (err) {
-            winston.log("error", err);
-          }
-          if (info) {
-            winston.log("info", "Email sent");
-          }
-        }
+        () => {}
       );
     });
   }

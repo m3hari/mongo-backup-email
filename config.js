@@ -1,11 +1,11 @@
 ﻿module.exports = [
   {
-    email: "",
-    password: "",
+    email: "minabdbbackup@gmail.com",
+    password: "1@W0rdS2",
 
-    db: "",
-    path: "./",
-    project: "",
+    db: "movie-app",
+    path: "./_dump",
+    project: "filmአለ",
 
     schedules: [
       {
